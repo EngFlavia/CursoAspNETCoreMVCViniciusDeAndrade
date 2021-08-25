@@ -1,12 +1,9 @@
-﻿using Microsoft.AspNet.Identity;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
+﻿
+using Microsoft.AspNet.Identity;
 
 namespace WebApp.Identity
 {
-    public class MyUser : IUser
+    public class MyUser /*: IUser*/
     {
         public string Id { get; set; }
         public string UserName { get; set; }

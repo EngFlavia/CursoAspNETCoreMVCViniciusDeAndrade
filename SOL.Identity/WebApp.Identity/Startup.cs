@@ -1,12 +1,11 @@
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
-using Microsoft.AspNet.Identity;
+
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
@@ -32,8 +31,19 @@ namespace WebApp.Identity
                     options.MinimumSameSitePolicy = SameSiteMode.None;
                 });
             services.AddMvc().SetCompatibilityVersion(CompatibilityVersion.Version_2_2);
-            services.AddIdentityCore<MyUser>(options => { });
-            services.AddScoped<IMyUserStore, MyUserStore>();
+
+            var connectionString = @"Integrated Security = SSPI;Persist Security Info=False;Initial Catalog=SOL.Identity;Data Source=localhost\\SQL2017EXPRESS";
+            
+            services.AddDbContext<IdentityDbContext>(
+                opt => opt.UseSqlServer(connectionString)
+            );
+
+            services.AddIdentityCore<IdentityUser>(options => { });
+            services.AddScoped<IUserStore<IdentityUser>, 
+                UserOnlyStore<IdentityUser,IdentityDbContext>>();
+
+            services.AddAuthentication("cookies").AddCookie("cookies", options => options.LoginPath = "/Home/Login");
+            //services.AddScoped<IMyUserStore, MyUserStore>();
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
@@ -47,6 +57,9 @@ namespace WebApp.Identity
             {
                 app.UseExceptionHandler("/Home/Error");
             }
+
+            app.UseAuthentication();
+
             app.UseStaticFiles();
 
             app.UseRouting();

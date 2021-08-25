@@ -1,21 +1,14 @@
 ﻿using Dapper;
 using Microsoft.AspNetCore.Identity;
-using System;
-using System.Collections.Generic;
 using System.Data.Common;
 using System.Data.SqlClient;
-using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 
 namespace WebApp.Identity
 {
-    public class MyUserStore : IMyUserStore
+    public class MyUserStore : IUserStore <MyUser>, IUserPasswordStore<MyUser>
     {
-        public Task CreateAsync(MyUser user)
-        {
-            throw new NotImplementedException();
-        }
         public async Task<IdentityResult> CreateAsync(MyUser user, CancellationToken cancellationToken)
         {
             using (var connection = GetOpenConnection())
@@ -23,14 +16,15 @@ namespace WebApp.Identity
                 await connection.ExecuteAsync(
                     "insert into Users ([Id],"+
                     "[UserName],"+
-                    "[NormalizedUserName])"+
+                    "[NormalizedUserName],"+
+                    "[PasswordHash])"+
                     "Values(@id, @userName,@normalizedUserName,@passwordHash)",
                     new
                     {
                         id = user.Id,
                         userName = user.UserName,
                         normalizedUserName = user.NormalizedUserName,
-                        PasswordHash = user.PasswordHash
+                        passwordHash = user.PasswordHash
                     });
             }
 
@@ -86,7 +80,7 @@ namespace WebApp.Identity
             {
                 return await connection.QueryFirstOrDefaultAsync<MyUser>(
                     "select * from Users where normalizedUserName = @name",
-                    new { nome = normalizedUserName });
+                    new { name = normalizedUserName });
             }
         }
 
@@ -126,40 +120,35 @@ namespace WebApp.Identity
                     "set [Id] = @id," +
                     "[UserName] = @userName," +
                     "[NormalizedUserName] = @normalizedUserName," +
-                    "[PasswordHash] = @passwordHash" +
+                    "[PasswordHash] = @passwordHash," +
                     "where [Id] = @id",
                     new 
                     { 
                         id = user.Id,
                         userName = user.UserName,
                         normalizedUserName = user.NormalizedUserName,
-                        PasswordHash = user.PasswordHash
+                        passwordHash = user.PasswordHash
                     });
             }
 
             return IdentityResult.Success;
         }
 
-       
-
-        public Task UpdateAsync(MyUser user)
+        public Task<string> GetPasswordHashAsync(MyUser user, CancellationToken cancellationToken)
         {
-            throw new NotImplementedException();
+            return Task.FromResult(user.PasswordHash);
         }
 
-        public Task DeleteAsync(MyUser user)
+        public Task<bool> HasPasswordAsync(MyUser user, CancellationToken cancellationToken)
         {
-            throw new NotImplementedException();
+            return Task.FromResult(user.PasswordHash != null);
         }
 
-        public Task<MyUser> FindByIdAsync(string userId)
+        public Task SetPasswordHashAsync(MyUser user, string passwordHash, CancellationToken cancellationToken)
         {
-            throw new NotImplementedException();
+            user.PasswordHash = passwordHash;
+            return Task.CompletedTask;
         }
 
-        public Task<MyUser> FindByNameAsync(string userName)
-        {
-            throw new NotImplementedException();
-        }
     }
 }

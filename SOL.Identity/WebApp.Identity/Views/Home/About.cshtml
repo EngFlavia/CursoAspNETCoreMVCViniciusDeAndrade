@@ -1,0 +1,22 @@
+﻿@*using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Threading.Tasks;
+
+namespace WebApp.Identity.Views.Home
+{
+    public class About
+    {
+    }
+}*@
+
+@{ 
+    ViewData["Title"] = "About";
+}
+<h2> About</h2>
+<ul>
+    @foreach (var claim in User.Claims)
+    {
+        <li><b>@claim.Type</b>:@claim.Value</li>
+    }
+</ul>
